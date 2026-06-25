@@ -1,0 +1,53 @@
+{
+    "meta": {
+        "label": "Events recipe",
+        "description": "Retrieve events from your Google Calendar base on parameters of an existing dataset",
+        "icon": "icon-envelope"
+    },
+    "kind": "PYTHON",
+    "inputRoles": [
+        {
+            "name": "input_A_role",
+            "label": "Dataset containing variables",
+            "description": "",
+            "arity": "UNARY",
+            "required": true,
+            "acceptsDataset": true
+        }
+    ],
+
+    "outputRoles": [
+        {
+            "name": "api_output",
+            "label": "Events",
+            "description": "",
+            "arity": "UNARY",
+            "required": true,
+            "acceptsDataset": true
+        }
+    ],
+    "params": [
+        {
+            "type": "SEPARATOR",
+            "label": "Authentication"
+        },
+        {
+            "name": "oauth_credentials",
+            "label": "Google Single Sign On",
+            "type": "PRESET",
+            "parameterSetId": "oauth-credentials"
+        },
+        {
+            "type": "SEPARATOR",
+            "label": "Parameters"
+        },
+        {
+            "name": "email_id_column",
+            "label": "Columns containing email IDs",
+            "description": "",
+            "type": "COLUMN",
+            "columnRole": "input_A_role"
+        }
+    ],
+    "resourceKeys": []
+}

@@ -1,0 +1,76 @@
+{
+    "meta" : {
+        "label": "Search emails",
+        "description": "Search emails from your Gmail account",
+        "icon": "icon-envelope"
+    },
+    "readable": true,
+    "writable": false,
+    "params": [
+        {
+            "name": "oauth_credentials",
+            "label": "Google Single Sign On",
+            "type": "PRESET",
+            "parameterSetId": "oauth-credentials"
+        },
+        {
+          "type": "STRING",
+          "name": "search_query",
+          "label": "Search query",
+          "defaultValue": ""
+        },        
+        {
+          "type": "DATE",
+          "name": "after_date",
+          "label": "After"
+        },
+        {
+          "type": "DATE",
+          "name": "before_date",
+          "label": "Before",
+          "description": "Optional"
+        },
+        {
+          "type": "STRING",
+          "name": "search_from",
+          "label": "From:",
+          "description": "Optional email addresse"
+        },
+        {
+          "type": "STRING",
+          "name": "search_to",
+          "label": "To:",
+          "description": "Optional email addresse"
+        },
+        {
+          "type": "MULTISELECT",
+          "name": "search_has",
+          "label": "Email has",
+          "selectChoices": [
+            { "value": "attachment", "label": "Attachment"},
+            { "value": "drive", "label": "Drive"},
+            { "value": "document", "label": "Document"},
+            { "value": "spreadsheet", "label": "Spreadsheet"},
+            { "value": "presentation", "label": "Presentation"},
+            { "value": "youtube", "label": "Youtube video"},
+            { "value": "userlabels", "label": "User Labels"},
+            { "value": "nouserlabels", "label": "No User Label"}
+          ]
+        },
+        {
+          "type": "INT",
+          "name": "max_results",
+          "label": "Max results",
+          "description": "(Optional)",
+          "defaultValue": -1,
+          "visibilityCondition": false
+        },
+        {
+          "type": "BOOLEAN",
+          "name": "raw_results",
+          "label": "Raw results",
+          "description": "Select to output raw JSON results",
+          "defaultValue": false
+        }
+    ]
+}
