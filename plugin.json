@@ -1,0 +1,15 @@
+{
+    "id": "google-mail",
+    "version": "0.0.1",
+    "meta": {
+        "label": "Gmail",
+        "category": "Google Workspace",
+        "description": "Search and retrieve from your Gmail account",
+        "author": "Dataiku (Alex Bourret)",
+        // icon: must be one of the FontAwesome 3.2.1 icons, complete list here at https://fontawesome.com/v3.2.1/icons/
+        "icon": "icon-envelope",
+        "tags": [], //for example: ["Machine Learning", "NLP"]
+        "url": "",
+        "licenseInfo": "Apache Software License"
+    }
+}
