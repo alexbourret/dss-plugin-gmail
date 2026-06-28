@@ -51,7 +51,11 @@ class GmailClient():
             "userId": user_id
         }
         if records_limit and records_limit > 0:
-            kwargs["maxResults"] = records_limit
+            remaining_records = records_limit - self.number_retrieved_events
+            if remaining_records <= 0:
+                self.next_page_token = None
+                return []
+            kwargs["maxResults"] = min(remaining_records, 500)
         if after_date:
             queries.append("after:{}".format(dss_to_gmail_date(after_date)))
         if before_date:
@@ -66,9 +70,9 @@ class GmailClient():
             queries.append("to:{}".format(to_user))
         if queries:
             kwargs["q"] = self.build_search_query(queries)
-        print("ALX:kwargs={}".format(kwargs))
+        if self.next_page_token:
+            kwargs["pageToken"] = self.next_page_token
         response = self.service.users().messages().list(**kwargs).execute()
-        print("ALX:results={}".format(response))
         self.update_next_page_token(response, records_limit)
         messages = response.get('messages', [])
         self.number_retrieved_events += len(messages)
@@ -82,7 +86,6 @@ class GmailClient():
             return {"api_error": "Null ID"}
 
     def get_messages_callback(self, request_id, response, exception):
-        print("ALX:got callback {}".format(request_id))
         if exception is not None:
             self.batched_messages.append({"api_error": "{}".format(exception)})
         else:
@@ -93,9 +96,7 @@ class GmailClient():
         batch = self.service.new_batch_http_request()
         for message_id in message_ids:
             batch.add(self.service.users().messages().get(userId="me", id=message_id, format="full", metadataHeaders=None), callback=self.get_messages_callback)
-        print("ALX:before")
         batch.execute()
-        print("ALX:after")
         return self.batched_messages
 
     def get_events(self, from_date, to_date=None, calendar_id="primary", records_limit=-1, can_raise=True):

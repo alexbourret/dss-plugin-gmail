@@ -1,10 +1,12 @@
 from dataiku.connector import Connector
 from google_mail_client import GmailClient
 from dku_common import get_token_from_config
-import datetime
+import base64
+import json
 
 
 class GmailConnector(Connector):
+    BATCH_SIZE = 20
 
     def __init__(self, config, plugin_config):
         Connector.__init__(self, config, plugin_config)
@@ -13,11 +15,10 @@ class GmailConnector(Connector):
         self.after_date = self.config.get("after_date")
         self.before_date = self.config.get("before_date", None)
         self.search_query = self.config.get("search_query", "")
-        self.raw_results = self.config.get("raw_results", False)
         self.search_has = self.config.get("search_has", [])
         self.search_from = self.config.get("search_from", "")
         self.search_to = self.config.get("search_to", "")
-        print("ALX:search_has={}".format(self.search_has))
+        self.max_results = self.config.get("max_results", -1)
 
     def get_read_schema(self):
         # In this example, we don't specify a schema here, so DSS will infer the schema
@@ -26,24 +27,44 @@ class GmailConnector(Connector):
 
     def generate_rows(self, dataset_schema=None, dataset_partitioning=None,
                       partition_id=None, records_limit=-1):
+        effective_limit = self._get_effective_limit(records_limit)
         first_call = True
         while first_call or self.client.has_more_events():
             first_call = False
-            messages = self.client.get_message_id(
+            message_refs = self.client.get_message_id(
                 search_query=self.search_query,
                 after_date=self.after_date,
                 before_date=self.before_date,
                 email_has=self.search_has,
                 from_user=self.search_from,
                 to_user=self.search_to,
-                records_limit=records_limit
+                records_limit=effective_limit
             )
-            if self.raw_results:
+            message_ids = [message.get("id") for message in message_refs if message.get("id")]
+            for offset in range(0, len(message_ids), self.BATCH_SIZE):
+                messages = self.client.get_messages(message_ids[offset:offset + self.BATCH_SIZE], can_raise=False)
                 for message in messages:
-                    yield {"api_output": message}
-            else:
-                for message in messages:
+                    message["body_text"] = ""
+                    message["body_html"] = ""
+                    payload = message.pop("payload", {})
+                    parts = payload.get("parts", [])
+                    for part in parts:
+                        mime_type = part.get("mimeType")
+                        if mime_type == "text/plain":
+                            message["body_text"] = decode_padded(part.get("body", {}).get("data", ""))
+                        if mime_type == "text/html":
+                            message["body_html"] = decode_padded(part.get("body", {}).get("data", ""))
                     yield message
+
+    def _get_effective_limit(self, records_limit):
+        dataset_limit = records_limit if records_limit and records_limit > 0 else -1
+        config_limit = self.max_results if self.max_results and self.max_results > 0 else -1
+
+        if dataset_limit > 0 and config_limit > 0:
+            return min(dataset_limit, config_limit)
+        if dataset_limit > 0:
+            return dataset_limit
+        return config_limit
 
     def get_writer(self, dataset_schema=None, dataset_partitioning=None,
                    partition_id=None):
@@ -83,3 +104,15 @@ class GmailConnector(Connector):
         in the connector definition
         """
         raise NotImplementedError
+
+
+def decode_padded(payload):
+    padded_payload = payload + "=" * (-len(payload) % 4)
+    ret = ""
+    try:
+        decoded_payload = base64.urlsafe_b64decode(padded_payload.encode('utf-8'))
+    except Exception:
+        return ""
+    if isinstance(decoded_payload, bytes):
+        decoded_payload = decoded_payload.decode('utf-8')
+    return decoded_payload
