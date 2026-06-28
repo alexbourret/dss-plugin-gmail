@@ -1,7 +1,7 @@
 {
     "meta" : {
         "label": "Search emails",
-        "description": "Search emails from your Gmail account",
+        "description": "Search and retrieve emails from your Gmail account",
         "icon": "icon-envelope"
     },
     "readable": true,
@@ -64,13 +64,6 @@
           "description": "(Optional)",
           "defaultValue": -1,
           "visibilityCondition": false
-        },
-        {
-          "type": "BOOLEAN",
-          "name": "raw_results",
-          "label": "Raw results",
-          "description": "Select to output raw JSON results",
-          "defaultValue": false
         }
     ]
 }
